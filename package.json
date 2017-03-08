@@ -1,0 +1,30 @@
+{
+  "name": "eduwine",
+  "version": "1.0.0",
+  "engines": {
+    "node": "7.4.0",
+    "npm": "4.0.5"
+  },
+  "description": "API with Node JS",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/server.js",
+   "pretest": "eslint ./src --fix",
+    "test": "echo \"No Tests\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srartese/eduwine.git"
+  },
+  "author": "Sara Artese",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/srartese/eduwine/issues"
+  },
+  "homepage": "https://github.com/srartese/eduwine#readme",
+  "devDependencies": {
+    "eslint": "^3.17.1",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-plugin-import": "^2.2.0"
+  }
+}
