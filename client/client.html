@@ -2,52 +2,100 @@
 <html lang="en">
 <head>
     <title>EduWIne</title>
-      <link rel="stylesheet" type="text/css" href="css/global.css">
+    <link rel="stylesheet" type="text/css" href="/global.css">
+      <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+      <link href="https://fonts.googleapis.com/css?family=Courgette" rel="stylesheet">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
     <script type="text/babel">
 	 //function to parse our response
 	 const parseJSON = (xhr, content) => {
+
       //parse response (obj will be empty in a 204 updated)
       const obj = JSON.parse(xhr.response);
-     // console.dir(obj);
-      //console.log(xhr.response);
+      
+	  //console.dir(obj);
+     //console.log(xhr.response);
+	  //console.log(xhr);
 
       //if message in response, add to screen
       if(obj.message) {
         const p = document.createElement('p');
         p.textContent = `Message: ${obj.message}`;
         content.appendChild(p);
+        //console.log(`Message: ${obj.message}`);
       }
       
+      //if users in response, add to screen
+      if(obj.ids) {
+        const userList = document.createElement('p');
+        const users = JSON.stringify(obj.ids);
+        userList.textContent = users;
+        content.appendChild(userList);
+       }
+ 
+      
+      const head = xhr.responseURL;
+      const contents = head.split('~');
+      //console.log(contents);
+      
       //Display catalog
-      if(obj.Products)
+      if(contents[1] == 'cat')
       {
-
 	     for(const item in obj.Products.List)
 	      {
+		    const divver = document.createElement("div");
+		    divver.setAttribute("class", "wine");
+
 		    const p = document.createElement('p');
-		    p.setAttribute("class", "wino");
+		    p.setAttribute("id", "wino" + item);
 		    
 			p.textContent += obj.Products.List[item].Name;
-			p.textContent += "Vintage: " + obj.Products.List[item].Vintage;
-			
+			p.textContent += " Vintage: " + obj.Products.List[item].Vintage;
 			
 			const inp = document.createElement("INPUT");
+		
 			//console.log(item);
 			inp.setAttribute("type", "button");
 			inp.setAttribute("class", "btn" + item);
 			inp.setAttribute("value", "Details");
-			content.appendChild(inp);
-			content.appendChild(p);
-			const userForm = document.querySelector('.btn'+item);
-			const getUser = (e) => getDetails(e, userForm);
-			userForm.addEventListener('button', getUser);
-		   }
-		 }
-	};
+			content.appendChild(divver);
+			divver.appendChild(p)
+			divver.appendChild(inp);
+			const theButton = document.querySelector('.btn'+item);
+			
+			//console.dir(theButton);
+			const getButton = (e) => getDetails(e, theButton);
+			theButton.addEventListener('click', getButton);
+		   }	
+		  }
+		 else {
+			
+			//If the request isnt the first, it will ad detail nodes.
+			//console.log("bttn: " + obj.bodyJn.bttn);
+			//console.log("file: " + obj.fileJn.Products.List);
+			//if content requested exists
+			const location =  obj.bodyJn.bttn.split('n');
+			const numloc = location[1];
+						
+			const x = document.getElementById("wino" + numloc);
+			//console.log(obj.fileJn.Products.List[1]);
+			console.log(obj.fileJn.Products.List[numloc].Vineyard.Name);
+			//console.log(obj.fileJn.Products.List[numloc].PriceRetail);
+
+			//if(obj.fileJn.Products.List[numloc].Vineyard.Name != null ){
+				x.insertAdjacentHTML('afterend', '<p class="detailDiv">' + 'Vineyard Name: ' + obj.fileJn.Products.List[numloc].Vineyard.Name + '<br />'+ 'Retail Price: $' + obj.fileJn.Products.List[numloc].PriceRetail + '</p>');
+			//}
+			//else
+			//{
+			//	console.log('400');
+			//}
+			
+			$('.'+obj.bodyJn.bttn+'').remove();	
+			}
+		};
     
 
-   //function to handle our response
+    //function to handle our response
     const handleResponse = (xhr, parseResponse) => {
       const content = document.querySelector('#content');
       
@@ -58,7 +106,8 @@
       //200, 201, 304, 404
       switch(xhr.status) {
         case 200: //success
-          content.innerHTML = `<b>200: Success</b>`;
+          //content.innerHTML = `<b>200: Success</b>`;
+          console.log("200: Success");
           break;
         case 201: //created
           content.innerHTML = '<b>201: User Created</b>';
@@ -82,7 +131,7 @@
 
       //parse response 
       //parseJSON(xhr, content);
-
+      console.log(xhr.status);
       if(parseResponse || xhr.status == '201' || xhr.status == '400') {
         parseJSON(xhr, content);
        //console.log(xhr.response);
@@ -91,12 +140,13 @@
       }
 
     };
-
+	
+	//After init this method sets up the catalog on the page with GET and API calls.
 	const viewCat = () => {
 		const method = 'get';
 
       const xhr = new XMLHttpRequest();
-      xhr.open(method, '/cat');
+      xhr.open(method, '/~cat');
       xhr.setRequestHeader ('Accept', 'application/json');
      
     if(method == 'get') {
@@ -112,33 +162,137 @@
       return false;
 
 	};
-	
-	const getDetails = (e, bttn) => {
-		console.log("Get detials");
-		//Check status & dynamically add elements
 		
-		/*for(const vin in obj.Products.List[item].Vineyard)
-			{
-			p.textContent += "Vineyard Name: " + obj.Products.List[item].Vineyard.Name;
-			//p.textContent += ˜*/
-			
-			//p.textContent += " PriceRetail: $" + obj.Products.List[item].PriceRetail;
+	const getDetails = (e, bttn) => {
+       //console.log(bttn.);
+       
+       const bttnID = $(bttn).attr('class');
+       //console.log(bttnID);
+        //alert($(bttn).attr('class'));
+       
+       const method = 'post';
+
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, '/det');
+      xhr.setRequestHeader ('Accept', 'application/json');
+     
+    if(method == 'post') {
+        //set onload to parse request and get json message
+        xhr.onload = () => handleResponse(xhr, true);
+      } else {
+        
+        xhr.onload = () => handleResponse(xhr, false);
+      }
+	  
+	  const data = `bttn=${bttnID}`;
+	  //console.log(data);
+	  xhr.send(data);
+      e.preventDefault();
+      return false;
 
 	};
+	
+	//function to send our post request
+    const sendPostWine = (e, wineForm) => {
+	    
+      const wineAction = wineForm.getAttribute('action');
+      const wineMethod = wineForm.getAttribute('method');
+      
+      const nameField = wineForm.querySelector('#nameField');
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open(wineMethod, wineAction);
+      
+     
+      xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+      xhr.setRequestHeader ('Accept', 'application/json');
+      
+      //set our function to handle the response
+      xhr.onload = () => handleResponse(xhr);
+      
+      const formData = `name=${nameField.value}`;
+      
+      //send our request with the data
+      xhr.send(formData);
+    
+      //prevent the browser's default action (to send the form on its own)
+      e.preventDefault();
+      //return false to prevent the browser from trying to change page
+      return false;
+    };
+    
+	//function to get our post request
+    const seePostWine = (e, wineForm) => {
+	    
+      const wineAction = wineForm.getAttribute('action');
+      const wineMethod = wineForm.getAttribute('method');
+      
+      const nameField = wineForm.querySelector('#nameField');
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open(wineMethod, wineAction);
+      //xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+      xhr.setRequestHeader ('Accept', 'application/json');
+     if(method == 'get') {
+        //set onload to parse request and get json message
+        xhr.onload = () => handleResponse(xhr, true);
+      } else {
+        //set onload to check meta data and NOT message
+        //There are no body responses in a head request
+        xhr.onload = () => handleResponse(xhr, false);
+      }
+     
+      xhr.send();
+      e.preventDefault();
+      return false;
+    };
+
 
     const init = () =>{
-		viewCat();		
+		viewCat();	
+		
+		//grab form
+      const wineForm = document.querySelector('#wineForm');
+	 const wineGet = document.querySelector('#wineGet');
+      
+      //create handler
+      const addWine = (e) => sendPostWine(e, wineForm);
+	  const getAllW = (e) => seePostWine(e, wineGet);
+      
+      //attach submit event (for clicking submit or hitting enter)
+      wineForm.addEventListener('submit', addWine);
+	  wineGet.addEventListener('submit', getAllW);
+	
     };
     
    window.onload = init;
-
+ 
     </script>
 </head>
 <body>
     <h1>EduWine</h1>
     <div id="content">
-	    
+	    <div class="intro">
+	    	<h2> Who said Wine couldn't be an educational experience?</h2>
+			<p> Here at EduWine we make it our priority to make you feel comfortable and provide the information you are inhibited from receiving.  Know the basic prices before going out, before ordering, and learn more about the Vineyards as we do!</p>
+	    </div>
     </div>
-    
+    <div class="requestWine">
+	    
+	    <form id="wineForm" name="winForm" action="/addWine" method="post">
+			<h4> Have a Wine in Mind that we should add? Let us know!</h4>	    
+			<input type="text" value="" name="wineForm" id="nameField">	    
+			<input type="submit" value="Send" id="sub" >
+	    </form>
+	    <form id="wineGet" name="winGet" action="/getWine" method="head">
+	      	<h3> See the suggested wines!</h3>	    
+			<input type="submit" value="View" id="sub">
+		</form>
+    </div>
+      <footer> 
+	    Sara Artese 2017<br />
+	    API Data by api.wine.com
+    </footer>
 </body>
+
 </html>
